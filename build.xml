@@ -1,0 +1,223 @@
+<project basedir="." default="package" name="BUILD_branching">
+	<description>
+	    Build branching. 
+            Also used by Hudson branching project. 
+	    JUnit test is available for this build.
+	    $Id: build_branching.xml $
+	</description>
+
+	<!-- set global properties for this build -->
+	<property name="branchingdir" location="../branching/"/>
+	<property name="srcbranching" location="${branchingdir}/src" />
+	<property name="buildbranching" location="${branchingdir}/build" />
+	<property name="libbranching" location="${branchingdir}/lib" />
+	<property name="release_dir" value="${branchingdir}/release" />
+	<property name="distbranching" location="${buildbranching}/dist" />
+	<property name="beast2path" location="../beast2" />
+	<property name="libBeast2" location="${beast2path}/lib" />
+	<property name="srcBeast2" location="${beast2path}/src" />
+	<property name="beast2classpath" location="${beast2path}/build" />
+	<property name="Add_on_dir" value="${release_dir}/add-on" />
+	<property name="beastapp2path" location="../BeastFX" />
+	<property name="beastapp2classpath" location="${beastapp2path}/build" />
+	<property name="asmclasspath" location="../asm/build" />
+
+    <import file="${beast2path}/build.xml" />
+
+	<property name="main_class_BEAST" value="beast.app.BeastMCMC" />
+	<property name="report" value="${buildbranching}/junitreport"/>
+
+	<path id="classpath">
+        <pathelement path="${buildbranching}"/>
+	    <fileset dir="${libBeast2}" includes="commons-math3-3.6.1.jar"/>
+	    <fileset dir="${libBeast2}" includes="antlr-runtime-4.10.1.jar"/>	
+	    <fileset dir="${libBeast2}" includes="fest.jar"/>
+        <fileset dir="${libBeast2}" includes="beagle.jar"/>
+        <fileset dir="${libBeast2}" includes="jam.jar"/>
+        <fileset dir="${libBeast2}" includes="colt.jar"/>
+        <pathelement path="${beast2classpath}"/>
+        <pathelement path="${beastapp2classpath}"/>
+        <pathelement path="${asmclasspath}"/>
+         <fileset dir="${libBeast2}/junit" includes="junit-platform-console-standalone-1.8.2.jar"/>
+ 	</path>
+
+	<!-- start -->
+	<target name="initbranching">
+		<echo message="${ant.project.name}: ${ant.file}" />
+
+	    <available file="${branchingdir}/version.xml" property="versionAvailable"/>
+    	<fail unless="versionAvailable">
+	      ** Required file version.xml does not exist. **
+	    </fail>
+
+    	<!-- Read package name and version from xml file -->
+	    <xmlproperty file="${branchingdir}/version.xml" prefix="fromVersionFile" />
+        <property name="projName" value="${fromVersionFile.package(name)}" />
+    	<property name="branchingversion" value="${fromVersionFile.package(version)}" />
+	</target>
+
+	<target name="cleanbranching">
+    	<delete dir="${buildbranching}" />
+	</target>
+
+	<!-- clean previous build, and then compile Java source code, and Juint test -->
+	<target name="build_all_branching" depends="cleanbranching,compile-allbranching,junitbranching"
+        description="Clean and Build all run-time stuff">
+	</target>
+
+	<!-- clean previous build, compile Java source code, and Junit test, and make the beast.jar and beauti.jar -->
+	<target name="build_jar_all_branching" depends="cleanbranching,compile-allbranching,junitbranching,dist_all_branching"
+        description="Clean and Build all run-time stuff">
+	</target>
+
+
+	<!-- No JUnit Test, clean previous build, compile Java source code, and make the branching.jar and beauti.jar -->
+	<target name="build_jar_all_branching_NoJUnitTest" depends="cleanbranching,compile-allbranching,dist_all_branching"
+        description="Clean and Build all run-time stuff">
+	</target>
+
+	<!-- compile Java source code -->
+	<target name="compile-allbranching" depends="initbranching,compile-all">
+
+
+	    <!-- Capture the path as a delimited property using the refid attribute -->
+	    <property name="myclasspath" refid="classpath"/>
+	    <!-- Emit the property to the ant console -->
+	    <echo message="Classpath = ${myclasspath}"/>
+
+		<mkdir dir="${buildbranching}" />
+
+		<!-- Compile the java code from ${srcbranching} into ${buildbranching} /bin -->
+		<javac srcdir="${srcbranching}" destdir="${buildbranching}" classpathref="classpath" 
+		       fork="true"
+		       memoryinitialsize="256m"
+		       memorymaximumsize="256m">
+			<include name="branching/**/**" />
+			<exclude name="branching/experiments/**" />
+			<!-- compile JUnit test classes -->
+			<include name="test/branching/**" />
+		</javac>
+		<echo message="Successfully compiled." />
+	</target>
+
+	<!-- make the beast.jar and beauti.jar -->
+	<target name="dist_all_branching" depends="compile-allbranching" description="create branching jar">
+		<!-- Create the distribution directory -->
+		<mkdir dir="${distbranching}" />
+
+		<jar jarfile="${distbranching}/branching.src.jar">
+			<fileset dir="${srcbranching}">
+				<include name="**/*.java" />
+				<include name="**/*.css" />
+			</fileset>
+        </jar>
+		<jar jarfile="${distbranching}/branching.package.jar">
+			<manifest>
+				<attribute name="Built-By" value="${user.name}" />
+			</manifest>
+			<fileset dir="${buildbranching}">
+				<include name="**/*.class" />
+				<include name="**/*.class" />
+				<include name="**/*.css" />
+			</fileset>
+		</jar>
+	</target>
+
+	<!-- run beast.jar -->
+	<target name="run_branching">
+		<java jar="${distbranching}/branching.jar" fork="true" />
+	</target>
+
+	
+	<!-- JUnit test -->
+	<target name="junitbranching">
+		<mkdir dir="${report}" />
+		<junit printsummary="yes"> <!--showoutput='yes'-->
+			<classpath>
+				<path refid="classpath" />
+				<path location="${buildbranching}" />
+			</classpath>
+
+			<formatter type="xml" />
+
+			<batchtest fork="yes" todir="${report}">
+				<fileset dir="${srcbranching}">
+                    <include name="test/**/*Test.java"/>                                         
+				</fileset>
+				<fileset dir="${srcBeast2}">
+                    <include name="test/beast/integration/**/*Test.java"/>                                         
+                    <exclude name="test/beast/integration/**/ResumeTest.java"/>                                         
+				</fileset>
+			</batchtest>
+		</junit>
+		<echo message="JUnit test finished." />
+	</target>
+    
+    <target name="junitreport">
+		<junitreport todir="${report}">
+			<fileset dir="${report}" includes="*.xml"/>
+			<report format="frames" todir="${report}"/>
+		</junitreport>
+		<echo message="JUnit test report finished." />
+	</target>
+
+	<target name="addon" depends="package"/>
+
+	<target name="package"
+	        depends="build_jar_all_branching_NoJUnitTest"
+	        description="release BEAST 2 add-on version of branching">
+
+		<delete dir="${Add_on_dir}" />
+		<!-- Create the release directory -->
+		<mkdir dir="${Add_on_dir}" />
+		<mkdir dir="${Add_on_dir}/lib" />
+		<mkdir dir="${Add_on_dir}/examples" />
+		<mkdir dir="${Add_on_dir}/fxtemplates" />
+
+		<copy todir="${Add_on_dir}">
+			<fileset file="version.xml"/>
+		</copy>
+		<copy todir="${Add_on_dir}/examples">
+			<fileset dir="examples" />
+		</copy>
+		<copy todir="${Add_on_dir}/lib">
+			<fileset dir="${distbranching}" includes="branching.package.jar" />
+		</copy>
+		<copy todir="${Add_on_dir}">
+			<fileset dir="${distbranching}" includes="branching.src.jar" />
+		</copy>
+		<!-->
+		<copy todir="${Add_on_dir}/fxtemplates">
+			<fileset file="fxtemplates/branching.xml" />
+		</copy>
+		-->
+		<jar jarfile="${distbranching}/branching.package.v${branchingversion}.zip">
+			<fileset dir="${Add_on_dir}">
+				<include name="**/*" />
+			</fileset>
+        </jar>
+		<echo message="Add-on version v${branchingversion} release is finished." />
+	</target>
+
+	<condition property="isWindows"><os family="windows" /></condition>
+	<condition property="isLinux"><and><os family="unix"/><not><os family="mac"/></not></and></condition>
+	<condition property="isMac"><os family="mac" /></condition>
+
+	<target name="installLinux" depends="package" if="isLinux">
+	        <mkdir dir="${user.home}/.beast/2.7/${projName}"/>
+			<unzip src="${distbranching}/branching.package.v${branchingversion}.zip" dest="${user.home}/.beast/2.7/${projName}"/>
+	</target>
+
+	<target name="installMac" depends="package" if="isMac">
+	        <mkdir dir="${user.home}/.beast/2.7/${projName}"/>
+			<unzip src="${distbranching}/branching.package.v${branchingversion}.zip" dest="${user.home}/Library/Application Support/BEAST/2.7/${projName}"/>
+	</target>
+
+	<target name="installWindows" depends="package" if="isWindows">
+	        <mkdir dir="${user.home}/BEAST/2.7/${projName}"/>
+			<unzip src="${distbranching}/branching.package.v${branchingversion}.zip" dest="${user.home}/BEAST/2.7/${projName}"/>
+	</target>
+
+	<target name="install" depends="installWindows,installMac,installLinux">
+	</target>
+</project>
