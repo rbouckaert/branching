@@ -9,7 +9,7 @@ import beast.base.evolution.tree.TreeInterface;
 @Description("Branching process tree prior")
 public class BranchingProcess extends TreeDistribution {
 	final public Input<Function> betaInput = new Input<>("beta", "rate parameter of the branching process", new Constant("1.0"));
-	final public Input<Function> thetanput = new Input<>("bthetaeta", "theta parameter of the branching process", new Constant("0.5"));
+	final public Input<Function> thetanput = new Input<>("theta", "theta parameter of the branching process", new Constant("0.5"));
 	
 	private TreeInterface tree;
 	private Function beta;
@@ -41,6 +41,7 @@ public class BranchingProcess extends TreeDistribution {
 		if (b == 1.0) {
 			for (int i = 0; i < t.length; i++) {
 				t[i] = 1.0 - (h - tree.getNode(taxonCount + i).getHeight()) / h; 
+				//t[i] = (h - tree.getNode(taxonCount + i).getHeight()) / h; 
 			}
 			logP = Math.log(k) + Math.log(calcIntegral(t, theta.getArrayValue()));
 		} else {
@@ -52,6 +53,9 @@ public class BranchingProcess extends TreeDistribution {
 			logP += Math.log(calcIntegral(t, theta.getArrayValue()));
 			
 		}
+		if (Double.isInfinite(logP)) {
+			logP = Double.NEGATIVE_INFINITY;
+		}
 		return logP;
 	}
 	
@@ -61,27 +65,31 @@ public class BranchingProcess extends TreeDistribution {
 		double result = 0;
 		
 		for (int j = 0; j < k; j++) {
-			double logG = 1.0;
-			for (int l = 0; l < k; l++) {
-				if (l != j) {
-					logG += Math.log(t[j]+t[l]) - Math.log(t[j] - t[l]);
+			if (t[j] > 0.0) {
+				double logG = 1.0;
+				for (int l = 0; l < k; l++) {
+					if (l != j) {
+						double x = t[j] - t[l];
+						logG += Math.log(t[j]+t[l]) - Math.signum(x) * Math.log(Math.abs(x));
+					}
 				}
-			}
-			
-			double logF = 0;
-			for (int i = 0; i < k; i++) {
-				if (i != j) {
-					logF += Math.log(t[j]) - Math.log((t[j] - t[i])*(t[j] - t[i]));
+				
+				double logF = 0;
+				for (int i = 0; i < k; i++) {
+					if (i != j) {
+						logF += Math.log(t[j]) - Math.log((t[j] - t[i])*(t[j] - t[i]));
+					}
 				}
+				
+				result += (t[j] - Math.exp(logG) * Math.log(t[j])/t[j]) * Math.exp(logF);
 			}
-			
-			result += (t[j] - Math.exp(logG) * Math.log(t[j])/t[j]) * Math.exp(logF);
 		}
 		
-		if (k % 2 == 0) {
-			return result;
-		} else {
-			return -result;
-		}
+		return Math.abs(result);
+//		if (k % 2 == 1) {
+//			return result;
+//		} else {
+//			return -result;
+//		}
 	}
 }
