@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><beast beautitemplate='Standard' beautistatus='' namespace="beast.core:beast.evolution.alignment:beast.evolution.tree.coalescent:beast.core.util:beast.evolution.nuc:beast.evolution.operators:beast.evolution.sitemodel:beast.evolution.substitutionmodel:beast.base.evolution.alignment:beast.pkgmgmt:beast.base.core:beast.base.inference:beast.base.evolution.tree.coalescent:beast.pkgmgmt:beast.base.core:beast.base.inference.util:beast.evolution.nuc:beast.base.evolution.operator:beast.base.inference.operator:beast.base.evolution.sitemodel:beast.base.evolution.substitutionmodel:beast.base.evolution.likelihood" required="" version="2.7">
+
+    <data
+id="dna"
+spec="Alignment"
+name="alignment">
+        <sequence id="seq_Carp" spec="Sequence" taxon="Carp" totalcount="4" value="?"/>
+        <sequence id="seq_Chicken" spec="Sequence" taxon="Chicken" totalcount="4" value="?"/>
+        <sequence id="seq_Cow" spec="Sequence" taxon="Cow" totalcount="4" value="?"/>
+<!-->
+        <sequence id="seq_Frog" spec="Sequence" taxon="Frog" totalcount="4" value="?"/>
+        <sequence id="seq_Human" spec="Sequence" taxon="Human" totalcount="4" value="?"/>
+        <sequence id="seq_Loach" spec="Sequence" taxon="Loach" totalcount="4" value="?"/>
+        <sequence id="seq_Mouse" spec="Sequence" taxon="Mouse" totalcount="4" value="?"/>
+        <sequence id="seq_Rat" spec="Sequence" taxon="Rat" totalcount="4" value="?"/>
+        <sequence id="seq_Seal" spec="Sequence" taxon="Seal" totalcount="4" value="?"/>
+        <sequence id="seq_Whale" spec="Sequence" taxon="Whale" totalcount="4" value="?"/>
+-->        
+    </data>
+
+                    <taxonset id="alltaxa" spec="TaxonSet">
+                        <taxon id="Carp" spec="Taxon"/>
+                        <taxon id="Chicken" spec="Taxon"/>
+                        <taxon id="Cow" spec="Taxon"/>
+                        <taxon id="Frog" spec="Taxon"/>
+                        <taxon id="Human" spec="Taxon"/>
+                        <taxon id="Loach" spec="Taxon"/>
+                        <taxon id="Mouse" spec="Taxon"/>
+                        <taxon id="Rat" spec="Taxon"/>
+                        <taxon id="Seal" spec="Taxon"/>
+                        <taxon id="Whale" spec="Taxon"/>
+                    </taxonset>
+
+    <map name="Uniform" >beast.base.inference.distribution.Uniform</map>
+    <map name="Exponential" >beast.base.inference.distribution.Exponential</map>
+    <map name="LogNormal" >beast.base.inference.distribution.LogNormalDistributionModel</map>
+    <map name="Normal" >beast.base.inference.distribution.Normal</map>
+    <map name="Beta" >beast.base.inference.distribution.Beta</map>
+    <map name="Gamma" >beast.base.inference.distribution.Gamma</map>
+    <map name="LaplaceDistribution" >beast.base.inference.distribution.LaplaceDistribution</map>
+    <map name="prior" >beast.base.inference.distribution.Prior</map>
+    <map name="InverseGamma" >beast.base.inference.distribution.InverseGamma</map>
+    <map name="OneOnX" >beast.base.inference.distribution.OneOnX</map>
+
+    <run id="mcmc" spec="MCMC" chainLength="10000000">
+        <state id="state" spec="State" storeEvery="5000">
+            <tree id="Tree.t:dna" spec="beast.base.evolution.tree.Tree" name="stateNode">
+                <taxonset id="TaxonSet.dna" spec="TaxonSet">
+                    <alignment idref="dna"/>
+                </taxonset>
+            </tree>
+            <parameter id="birthRate.t:dna" spec="parameter.RealParameter" lower="0.0" name="stateNode">1.0</parameter>
+            <parameter id="origin.t:dna" spec="parameter.RealParameter" lower="0.0" name="stateNode">1.0</parameter>
+        </state>
+        
+        <init id="RandomTree.t:dna" spec="RandomTree" estimate="false" initial="@Tree.t:dna" taxa="@dna">
+            <populationModel id="ConstantPopulation0.t:dna" spec="ConstantPopulation">
+                <parameter id="randomPopSize.t:dna" spec="parameter.RealParameter" name="popSize">1.0</parameter>
+            </populationModel>
+        </init>
+        
+        <distribution id="posterior" spec="CompoundDistribution">
+            <distribution id="prior" spec="CompoundDistribution">
+            
+                <distribution id="BranchingProcess.t:dna" spec="branching.tree.BranchingProcess" tree="@Tree.t:dna" 
+	                origin="@origin.t:dna"/>
+                <prior name="distribution" x="@origin.t:dna">
+                    <LogNormal id="LogNormalDistributionModel.0" meanInRealSpace="true" name="distr" M="1.0" S="0.025"/>
+                </prior>
+                <!-->
+                <distribution id="root.prior" spec="beast.base.evolution.tree.MRCAPrior" tree="@Tree.t:dna">
+	                <taxonset idref="TaxonSet.dna"/>
+                    <LogNormal id="LogNormalDistributionModel.0" meanInRealSpace="true" name="distr" M="1.0" S="0.025"/>
+                </distribution>
+                -->
+                <!-->
+                <distribution id="pair.prior" spec="beast.base.evolution.tree.MRCAPrior" tree="@Tree.t:dna">
+                    <taxonset id="pair" spec="TaxonSet">
+                        <taxon idref="Carp"/>
+                        <taxon idref="Chicken"/>
+                    </taxonset>
+                </distribution>
+                <distribution id="triplet.prior" spec="beast.base.evolution.tree.MRCAPrior" tree="@Tree.t:dna">
+                    <taxonset id="triplet" spec="TaxonSet">
+                        <taxon idref="Carp"/>
+                        <taxon idref="Chicken"/>
+                        <taxon idref="Cow"/>
+                    </taxonset>
+                </distribution>
+                <distribution id="quartet.prior" spec="beast.base.evolution.tree.MRCAPrior" tree="@Tree.t:dna">
+                    <taxonset id="quartet" spec="TaxonSet">
+                        <taxon idref="Carp"/>
+                        <taxon idref="Chicken"/>
+                        <taxon idref="Cow"/>
+                        <taxon idref="Frog"/>
+                    </taxonset>
+                </distribution>
+                -->
+
+            </distribution>
+        </distribution>
+
+        <operator id="BranchingModelOriginScaler.t:dna" spec="kernel.BactrianScaleOperator" scaleFactor="0.5" parameter="@origin.t:dna" upper="10.0" weight="1.0"/>
+
+        <operator id="BranchingModelTreeRootScaler.t:dna" spec="kernel.BactrianScaleOperator" rootOnly="true" scaleFactor="0.5" tree="@Tree.t:dna" upper="10.0" weight="3.0"/>
+        <operator id="BranchingModelUniformOperator.t:dna" spec="kernel.BactrianNodeOperator" tree="@Tree.t:dna" weight="30.0"/>
+        <operator id="BranchingModelSubtreeSlide.t:dna" spec="kernel.BactrianSubtreeSlide" tree="@Tree.t:dna" weight="15.0"/>
+        <operator id="BranchingModelNarrow.t:dna" spec="Exchange" tree="@Tree.t:dna" weight="15.0"/>
+        <operator id="BranchingModelWide.t:dna" spec="Exchange" isNarrow="false" tree="@Tree.t:dna" weight="3.0"/>
+        <operator id="BranchingModelWilsonBalding.t:dna" spec="WilsonBalding" tree="@Tree.t:dna" weight="3.0"/>
+        <operator id="BranchingModelBICEPSEpochTop.t:dna" spec="EpochFlexOperator" scaleFactor="0.1" tree="@Tree.t:dna" weight="2.0"/>
+        <operator id="BranchingModelBICEPSEpochAll.t:dna" spec="EpochFlexOperator" fromOldestTipOnly="false" scaleFactor="0.1" tree="@Tree.t:dna" weight="2.0"/>
+        <operator id="BranchingModelBICEPSTreeFlex.t:dna" spec="TreeStretchOperator" scaleFactor="0.01" tree="@Tree.t:dna" weight="2.0"/>
+
+        <logger id="tracelog" spec="Logger" fileName="$(filebase).log" logEvery="1000" model="@posterior" sanitiseHeaders="true" sort="smart">
+            <log idref="posterior"/>
+            <log idref="prior"/>
+            <log id="TreeHeight.t:dna" spec="beast.base.evolution.tree.TreeStatLogger" tree="@Tree.t:dna"/>
+            <log idref="BranchingProcess.t:dna"/>
+            <log idref="origin.t:dna"/>
+            <!-->
+            <log idref="pair.prior"/>
+            <log idref="triplet.prior"/>
+            <log idref="quartet.prior"/>
+            -->
+        </logger>
+        <logger id="screenlog" spec="Logger" logEvery="100000">
+            <log idref="posterior"/>
+            <log idref="prior"/>
+        </logger>
+        <logger id="treelog.t:dna" spec="Logger" fileName="$(filebase).trees" logEvery="1000" mode="tree">
+            <log id="TreeWithMetaDataLogger.t:dna" spec="beast.base.evolution.TreeWithMetaDataLogger" tree="@Tree.t:dna"/>
+        </logger>
+    </run>
+
+</beast>
