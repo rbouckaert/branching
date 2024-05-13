@@ -71,8 +71,32 @@ public class BranchingProcess extends TreeDistribution {
 		return logP;
 	}
 	
-	
 	private double calcIntegral(double [] t) {
+		// maximum number of steps
+		int N = 10000;
+		// upper bound on integral
+		double max = 100.0;
+		double delta = max / N;
+		double theta = 0;
+		double y = 0; 
+		int k = t.length;
+		for (int i = 0; i < N; i++) {
+			double dx = Math.pow(theta, k-1);
+			for (int j = 0; j < k; j++) {
+				double r = (1.0+theta*t[j]);
+				dx *= 1.0/(r*r);
+			}
+			theta += delta;
+			dx = dx * delta;
+			y += dx;
+//			if (i == N-1) {
+//				System.out.println(y + " " + dx);
+//			}
+		}
+		return y;
+	}
+	
+	private double calcIntegral0(double [] t) {
 		int k = t.length;
 		double result = 0;
 		
@@ -103,5 +127,10 @@ public class BranchingProcess extends TreeDistribution {
 //		} else {
 //			return -result;
 //		}
+	}
+	
+	@Override
+	protected boolean requiresRecalculation() {
+		return true;
 	}
 }
