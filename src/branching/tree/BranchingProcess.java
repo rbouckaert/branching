@@ -2,8 +2,8 @@ package branching.tree;
 
 
 /**
- * times hould be independent and distributed 1/(1+x)^2
- * therefores y ~ uniform(0,1)
+ * times should be independent and distributed 1/(1+x)^2
+ * therefore y ~ uniform(0,1)
  * then x = y/(1-y)
  */
 
@@ -75,20 +75,22 @@ public class BranchingProcess extends TreeDistribution {
 		// maximum number of steps
 		int N = 10000;
 		// upper bound on integral
-		double max = 100.0;
+		double max = 1000.0;
 		double delta = max / N;
 		double theta = 0;
 		double y = 0; 
 		int k = t.length;
-		for (int i = 0; i < N; i++) {
-			double dx = Math.pow(theta, k-1);
+		double prev = 0;
+		for (int i = 0; i < N; i++) {			
+			double x = Math.pow(theta, k-1);
 			for (int j = 0; j < k; j++) {
 				double r = (1.0+theta*t[j]);
-				dx *= 1.0/(r*r);
+				x *= 1.0/(r*r);
 			}
 			theta += delta;
-			dx = dx * delta;
-			y += dx;
+
+			y += delta * (prev + (x - prev) * 0.5);
+			prev = x;
 //			if (i == N-1) {
 //				System.out.println(y + " " + dx);
 //			}
