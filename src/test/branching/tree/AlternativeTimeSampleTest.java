@@ -10,7 +10,7 @@ public class AlternativeTimeSampleTest {
 	public static void main(String[] args) throws Exception {
 		PrintStream out = new PrintStream("/tmp/sample.log");
 		out.print("Sample\t");
-		int N = 9-4;
+		int N = 9;
 		for (int j = 0; j < N; j++) {
 			out.print("internalNodeTime." + j + "\t");
 		}

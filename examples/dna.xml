@@ -7,7 +7,6 @@ name="alignment">
         <sequence id="seq_Carp" spec="Sequence" taxon="Carp" totalcount="4" value="?"/>
         <sequence id="seq_Chicken" spec="Sequence" taxon="Chicken" totalcount="4" value="?"/>
         <sequence id="seq_Cow" spec="Sequence" taxon="Cow" totalcount="4" value="?"/>
-<!-->
         <sequence id="seq_Frog" spec="Sequence" taxon="Frog" totalcount="4" value="?"/>
         <sequence id="seq_Human" spec="Sequence" taxon="Human" totalcount="4" value="?"/>
         <sequence id="seq_Loach" spec="Sequence" taxon="Loach" totalcount="4" value="?"/>
@@ -15,6 +14,7 @@ name="alignment">
         <sequence id="seq_Rat" spec="Sequence" taxon="Rat" totalcount="4" value="?"/>
         <sequence id="seq_Seal" spec="Sequence" taxon="Seal" totalcount="4" value="?"/>
         <sequence id="seq_Whale" spec="Sequence" taxon="Whale" totalcount="4" value="?"/>
+<!-->
 -->        
     </data>
 
@@ -61,11 +61,15 @@ name="alignment">
         
         <distribution id="posterior" spec="CompoundDistribution">
             <distribution id="prior" spec="CompoundDistribution">
-            
                 <distribution id="BranchingProcess.t:dna" spec="branching.tree.BranchingProcess" tree="@Tree.t:dna" 
 	                origin="@origin.t:dna"/>
+	            <!--
                 <prior name="distribution" x="@origin.t:dna">
                     <LogNormal id="LogNormalDistributionModel.0" meanInRealSpace="true" name="distr" M="1.0" S="0.025"/>
+                </prior>
+                -->
+                <prior id="originprior" name="distribution" x="@origin.t:dna">
+                    <Uniform name="distr" lower="0.999" upper="1.001"/>
                 </prior>
                 <!-->
                 <distribution id="root.prior" spec="beast.base.evolution.tree.MRCAPrior" tree="@Tree.t:dna">
@@ -108,8 +112,13 @@ name="alignment">
         <operator id="BranchingModelNarrow.t:dna" spec="Exchange" tree="@Tree.t:dna" weight="15.0"/>
         <operator id="BranchingModelWide.t:dna" spec="Exchange" isNarrow="false" tree="@Tree.t:dna" weight="3.0"/>
         <operator id="BranchingModelWilsonBalding.t:dna" spec="WilsonBalding" tree="@Tree.t:dna" weight="3.0"/>
+
+        <!--
+        <operator id="BranchingModelTreeScaler.t:dna" spec="kernel.BactrianScaleOperator" rootOnly="false" scaleFactor="0.5" tree="@Tree.t:dna" upper="10.0" weight="3.0"/>
         <operator id="BranchingModelBICEPSEpochTop.t:dna" spec="EpochFlexOperator" scaleFactor="0.1" tree="@Tree.t:dna" weight="2.0"/>
-        <operator id="BranchingModelBICEPSEpochAll.t:dna" spec="EpochFlexOperator" fromOldestTipOnly="false" scaleFactor="0.1" tree="@Tree.t:dna" weight="2.0"/>
+-->
+        <operator id="BranchingModelBICEPSEpochAll.t:dna" spec="EpochFlexOperator" fromOldestTipOnly="false" scaleFactor="0.1" tree="@Tree.t:dna" weight="10.0"/>
+
         <operator id="BranchingModelBICEPSTreeFlex.t:dna" spec="TreeStretchOperator" scaleFactor="0.01" tree="@Tree.t:dna" weight="2.0"/>
 
         <logger id="tracelog" spec="Logger" fileName="$(filebase).log" logEvery="1000" model="@posterior" sanitiseHeaders="true" sort="smart">
@@ -118,13 +127,14 @@ name="alignment">
             <log id="TreeHeight.t:dna" spec="beast.base.evolution.tree.TreeStatLogger" tree="@Tree.t:dna"/>
             <log idref="BranchingProcess.t:dna"/>
             <log idref="origin.t:dna"/>
+            <log spec="branching.tree.SortedNodeTimeLogger" tree="@Tree.t:dna"/>
             <!-->
             <log idref="pair.prior"/>
             <log idref="triplet.prior"/>
             <log idref="quartet.prior"/>
             -->
         </logger>
-        <logger id="screenlog" spec="Logger" logEvery="100000">
+        <logger id="screenlog" spec="Logger" logEvery="10000">
             <log idref="posterior"/>
             <log idref="prior"/>
         </logger>
@@ -134,3 +144,4 @@ name="alignment">
     </run>
 
 </beast>
+	
