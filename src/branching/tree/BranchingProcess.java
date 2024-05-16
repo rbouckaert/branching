@@ -70,8 +70,49 @@ public class BranchingProcess extends TreeDistribution {
 		}
 		return logP;
 	}
+
 	
-	private double calcIntegral(double [] t) {
+	final static double epsilon = 0.00;
+	public double calcIntegralX(double [] t) {
+		int k = t.length;
+		double result = 0;
+		
+		for (int j = 0; j < k; j++) {
+			// 1/t_j
+			double term = 1.0/t[j];
+			
+			// prod_{i=0, i\neq j}^{k-1} \frac{t_j}{(t_j-t_i)^2}
+			double prod = 1.0;
+			for (int i = 0; i < k; i++) {
+				if (i != j) {
+					double d = (t[j]-t[i]);
+					if (Math.abs(d) < epsilon) {
+						d = epsilon;
+					}
+					prod = prod * t[j]/(d*d);
+				}
+			}
+			term *= prod;
+			
+			// 1-log(t_j)\sum_{l=0,l\neq j}^{k-1} \frac{t_j+t_l}{t_j-t_l}
+			double sum = 0;
+			for (int l = 0; l < k; l++) {
+				if (l != j) {
+					double d = (t[j]-t[l]);
+					if (Math.abs(d) < epsilon) {
+						d = d > 0 ? epsilon : -epsilon;
+					}
+					sum += (t[j]+t[l])/d;
+				}
+			}
+			term *= (1-Math.log(t[j]) * sum);
+			
+			result += term;
+		}
+		return Math.abs(result);
+	}
+	
+	public double calcIntegral(double [] t) {
 		// maximum number of steps
 		int N = 10000;
 		// upper bound on integral
@@ -98,7 +139,7 @@ public class BranchingProcess extends TreeDistribution {
 		return y;
 	}
 	
-	private double calcIntegral0(double [] t) {
+	public double calcIntegralOrg(double [] t) {
 		int k = t.length;
 		double result = 0;
 		
@@ -119,7 +160,7 @@ public class BranchingProcess extends TreeDistribution {
 					}
 				}
 				
-				result += (t[j] - Math.exp(logG) * Math.log(t[j])/t[j]) * Math.exp(logF);
+				result += (1.0/t[j] - Math.exp(logG) * Math.log(t[j])/t[j]) * Math.exp(logF);
 			}
 		}
 		
