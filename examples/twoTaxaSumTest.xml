@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><beast beautitemplate='Standard' beautistatus='' namespace="beast.core:beast.evolution.alignment:beast.evolution.tree.coalescent:beast.core.util:beast.evolution.nuc:beast.evolution.operators:beast.evolution.sitemodel:beast.evolution.substitutionmodel:beast.base.evolution.alignment:beast.pkgmgmt:beast.base.core:beast.base.inference:beast.base.evolution.tree.coalescent:beast.pkgmgmt:beast.base.core:beast.base.inference.util:beast.evolution.nuc:beast.base.evolution.operator:beast.base.inference.operator:beast.base.evolution.sitemodel:beast.base.evolution.substitutionmodel:beast.base.evolution.likelihood" required="" version="2.7">
+
+    <data
+id="dna"
+spec="Alignment"
+name="alignment">
+        <sequence id="seq_Carp" spec="Sequence" taxon="Carp" totalcount="4" value="?"/>
+        <sequence id="seq_Chicken" spec="Sequence" taxon="Chicken" totalcount="4" value="?"/>
+    </data>
+
+                    <taxonset id="alltaxa" spec="TaxonSet">
+                        <taxon id="Carp" spec="Taxon"/>
+                        <taxon id="Chicken" spec="Taxon"/>
+                    </taxonset>
+
+    <map name="Uniform" >beast.base.inference.distribution.Uniform</map>
+    <map name="Exponential" >beast.base.inference.distribution.Exponential</map>
+    <map name="LogNormal" >beast.base.inference.distribution.LogNormalDistributionModel</map>
+    <map name="Normal" >beast.base.inference.distribution.Normal</map>
+    <map name="Beta" >beast.base.inference.distribution.Beta</map>
+    <map name="Gamma" >beast.base.inference.distribution.Gamma</map>
+    <map name="LaplaceDistribution" >beast.base.inference.distribution.LaplaceDistribution</map>
+    <map name="prior" >beast.base.inference.distribution.Prior</map>
+    <map name="InverseGamma" >beast.base.inference.distribution.InverseGamma</map>
+    <map name="OneOnX" >beast.base.inference.distribution.OneOnX</map>
+
+    <run id="mcmc" spec="MCMC" chainLength="10000000">
+        <state id="state" spec="State" storeEvery="5000">
+            <parameter id="treeHeight.t:dna" spec="parameter.RealParameter" lower="0.0" name="stateNode">0.5</parameter>
+        </state>
+        
+        <distribution id="posterior" spec="CompoundDistribution">
+            <distribution id="prior" spec="CompoundDistribution">
+                <distribution id="BranchingProcess.t:dna" spec="branching.tree.TwoTaxaSumDistribution" treeHeight="@treeHeight.t:dna" />
+
+                <prior id="originprior" name="distribution" x="@treeHeight.t:dna">
+                    <Uniform name="distr" lower="1e-7" upper="1.00"/>
+                </prior>
+            </distribution>
+        </distribution>
+
+        <operator id="BranchingModelOriginScaler.t:dna" spec="kernel.BactrianScaleOperator" scaleFactor="0.5" parameter="@treeHeight.t:dna" upper="10.0" weight="1.0"/>
+
+        <logger id="tracelog" spec="Logger" fileName="$(filebase).log" logEvery="1000" model="@posterior" sanitiseHeaders="true" sort="smart">
+            <log idref="posterior"/>
+            <log idref="BranchingProcess.t:dna"/>
+            <log idref="treeHeight.t:dna"/>
+        </logger>
+        <logger id="screenlog" spec="Logger" logEvery="10000">
+            <log idref="posterior"/>
+            <log idref="prior"/>
+        </logger>
+    </run>
+
+</beast>
+	
